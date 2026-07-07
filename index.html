@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Iceland · Clyde & Lucy</title>
+<meta name="description" content="Clyde & Lucy's Ring Road field guide — July 2026">
+<meta name="theme-color" content="#14212B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<main id="views">
+  <!-- ── NOW ── -->
+  <section id="view-now" class="view active">
+    <header class="sky" id="sky">
+      <svg id="sky-svg" viewBox="0 0 400 190" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="skygrad" x1="0" y1="0" x2="0" y2="1">
+            <stop id="sky-top" offset="0%" stop-color="#BFD8E4"/>
+            <stop id="sky-mid" offset="62%" stop-color="#E8EFF2"/>
+            <stop id="sky-low" offset="100%" stop-color="#F2E4C8"/>
+          </linearGradient>
+        </defs>
+        <rect width="400" height="190" fill="url(#skygrad)"/>
+        <circle id="sun" cx="200" cy="80" r="16" fill="#F4C56A" opacity="0.95"/>
+        <path id="mtn-far" d="M0,190 L0,132 L48,104 L86,126 L132,88 L178,122 L224,96 L268,128 L316,102 L358,124 L400,110 L400,190 Z" fill="#8FA9B8" opacity=".55"/>
+        <path id="mtn-near" d="M0,190 L0,152 L42,130 L90,150 L138,118 L196,152 L242,128 L300,156 L348,136 L400,150 L400,190 Z" fill="#3E5668" opacity=".85"/>
+      </svg>
+      <div class="sky-copy">
+        <p class="greet" id="greet">Góðan daginn</p>
+        <h1 id="now-title">Iceland</h1>
+        <p class="sky-sub" id="now-sub"></p>
+      </div>
+    </header>
+    <div class="wrap" id="now-content"></div>
+  </section>
+
+  <!-- ── DAYS ── -->
+  <section id="view-days" class="view">
+    <div class="wrap">
+      <h2 class="view-title">The plan</h2>
+      <p class="view-lede">Eight days, one Ring Road, counter-clockwise.</p>
+      <nav class="day-strip" id="day-strip" aria-label="Pick a day"></nav>
+      <div id="day-detail"></div>
+    </div>
+  </section>
+
+  <!-- ── MAP ── -->
+  <section id="view-map" class="view">
+    <div id="map" role="application" aria-label="Trip map"></div>
+    <div class="map-legend" id="map-legend"></div>
+  </section>
+
+  <!-- ── INFO ── -->
+  <section id="view-info" class="view">
+    <div class="wrap" id="info-content"></div>
+  </section>
+
+  <!-- ── CHAT ── -->
+  <section id="view-chat" class="view">
+    <div class="chat-shell">
+      <div class="chat-scroll" id="chat-scroll">
+        <div id="chat-log"></div>
+      </div>
+      <div id="chat-key-panel" class="key-panel" hidden>
+        <h3>Connect the guide</h3>
+        <p>Paste the OpenRouter key once — it’s stored only in this browser.</p>
+        <input id="key-input" type="password" inputmode="text" autocomplete="off"
+               placeholder="sk-or-v1-…" aria-label="OpenRouter API key">
+        <button class="btn" id="key-save">Save key</button>
+      </div>
+      <form class="chat-bar" id="chat-form">
+        <input id="chat-input" type="text" placeholder="Ask about today…" autocomplete="off" aria-label="Message">
+        <button class="chat-send" type="submit" aria-label="Send">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 11.5 21 3l-8.5 18-2.3-7.2L3 11.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<!-- ── TAB BAR ── -->
+<nav class="tabbar" aria-label="Sections">
+  <button class="tab active" data-view="now">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>Now</span>
+  </button>
+  <button class="tab" data-view="days">
+    <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 2.8v4M16 2.8v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>Days</span>
+  </button>
+  <button class="tab" data-view="map">
+    <svg viewBox="0 0 24 24"><path d="M9 4.5 3.5 6.7v12.8L9 17.3l6 2.2 5.5-2.2V4.5L15 6.7 9 4.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4.5v12.8M15 6.7v12.8" stroke="currentColor" stroke-width="2"/></svg>
+    <span>Map</span>
+  </button>
+  <button class="tab" data-view="info">
+    <svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 11v5.5M12 7.6v.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+    <span>Info</span>
+  </button>
+  <button class="tab" data-view="chat">
+    <svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10L5.5 20v-3.5H4v-11Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    <span>Guide</span>
+  </button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="data.js"></script>
+<script src="routes.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
