@@ -91,24 +91,27 @@ def slug(s):
     s = unicodedata.normalize('NFKD', s).encode('ascii','ignore').decode()
     return re.sub(r'[^a-z0-9]+','-', s.lower()).strip('-')
 if __name__ == '__main__':
-    import json, wave, os, subprocess
+    import json, wave, os, subprocess, tempfile, pathlib
     from piper import PiperVoice
+    SITE = pathlib.Path(__file__).resolve().parent.parent
     v = PiperVoice.load('./voices/is_IS-salka-medium.onnx')
-    os.makedirs('/Users/clyde/iceland/site/audio', exist_ok=True)
+    os.makedirs(SITE / 'audio', exist_ok=True)
     out = {}
     for word, info in PRON.items():
         if info is None: continue
         s = slug(word)
-        wav = f'/tmp/{s}.wav'
-        with wave.open(wav,'wb') as w:
+        wav = os.path.join(tempfile.gettempdir(), f'{s}.wav')
+        with wave.open(wav, 'wb') as w:
             v.synthesize_wav(SAY.get(word, word), w)
-        m4a = f'/Users/clyde/iceland/site/audio/{s}.m4a'
-        subprocess.run(['# converted with ffmpeg (see below) — Chrome would not decode afconvert AAC
+        # MP3 via ffmpeg — Chrome would not decode afconvert's AAC/M4A output
+        subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', wav,
+                        '-codec:a', 'libmp3lame', '-q:a', '7',
+                        str(SITE / 'audio' / f'{s}.mp3')], check=True)
         out[word] = {"f": s, "t": info[0], **({"g": info[1]} if info[1] else {})}
-    with open('/Users/clyde/iceland/site/pron.js','w') as f:
+    with open(SITE / 'pron.js', 'w') as f:
         f.write("// Pronunciations: Piper TTS (is_IS-salka, trained on Iceland's open Talromur corpus)\n")
         f.write("const PRON = " + json.dumps(out, ensure_ascii=False) + ";\n")
-    print(f"{len(out)} words -> site/audio/, pron.js written")
+    print(f"{len(out)} words -> audio/, pron.js written")
 
 # Regenerate:
 #   pip install piper-tts && python -m piper.download_voices is_IS-salka-medium --data-dir ./voices
