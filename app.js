@@ -39,6 +39,48 @@ const ICONS = {
   nav: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 3 3.8 10.2l7 2.9 2.9 7L21 3Z" stroke-linejoin="round"/></svg>',
   web: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.7 2.6 4 5.8 4 9s-1.3 6.4-4 9c-2.7-2.6-4-5.8-4-9s1.3-6.4 4-9Z"/></svg>',
 };
+// ---------- pronunciation ----------
+// Match the earliest Icelandic term appearing in a display name (tie: longest).
+const PRON_KEYS = Object.keys(PRON).sort((a, b) => b.length - a.length);
+function pronFor(name) {
+  let best = null, bestIdx = Infinity;
+  for (const k of PRON_KEYS) {
+    const i = name.indexOf(k);
+    if (i !== -1 && i < bestIdx) { best = k; bestIdx = i; }
+  }
+  return best;
+}
+function sayBtn(name) {
+  const k = pronFor(name);
+  if (!k) return '';
+  return `<button class="say" data-word="${esc(k)}" aria-label="Hear ${esc(k)} in Icelandic" title="Hear it in Icelandic">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H3v6h3.5L11 19V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9.2 9.2 0 0 1 0 13"/></svg>
+  </button>`;
+}
+const audioCache = {};
+let toastTimer = null;
+function speak(word) {
+  const p = PRON[word];
+  if (!p) return;
+  const a = audioCache[p.f] || (audioCache[p.f] = new Audio('audio/' + p.f + '.mp3'));
+  a.currentTime = 0;
+  a.play().catch(() => {});
+  let toast = document.getElementById('pron-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'pron-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<b>${esc(word)}</b><span class="t">${esc(p.t)}</span>${p.g ? `<span class="g">${esc(p.g)}</span>` : ''}`;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 4500);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.say');
+  if (b) { e.preventDefault(); e.stopPropagation(); speak(b.dataset.word); }
+});
+
 function poiLinks(p, withNav) {
   let h = `<a class="chip" target="_blank" rel="noopener" href="${gmapsSearch(p)}">${ICONS.pin} Map</a>`;
   if (withNav && p.lat) h += `<a class="chip" target="_blank" rel="noopener" href="${gmapsNav(p)}">${ICONS.nav} Navigate</a>`;
@@ -46,7 +88,7 @@ function poiLinks(p, withNav) {
   return `<div class="links">${h}</div>`;
 }
 function poiCard(p, withNav = false) {
-  return `<div class="card"><h4>${esc(p.name)}</h4><p class="note">${esc(p.note)}</p>${poiLinks(p, withNav)}</div>`;
+  return `<div class="card"><h4>${esc(p.name)}${sayBtn(p.name)}</h4><p class="note">${esc(p.note)}</p>${poiLinks(p, withNav)}</div>`;
 }
 function block(title, kind, inner) {
   return inner ? `<div class="block ${kind}"><h3><span class="dot"></span>${esc(title)}</h3>${inner}</div>` : '';
@@ -66,7 +108,7 @@ function hotelCard(h, heading) {
   if (!h) return '';
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name + ', ' + h.address)}`;
   return `<div class="card hotel-card">
-    <h4>${esc(h.name)}</h4>
+    <h4>${esc(h.name)}${sayBtn(h.name + ' ' + h.town)}</h4>
     <p class="addr">${esc(h.address)}</p>
     <div class="hotel-grid">
       <div class="fact"><div class="k">Check in</div><div class="v">${esc(h.checkin)}</div></div>
@@ -111,7 +153,7 @@ function todayBanner(day, label) {
     : `<div class="stats"><span>${esc(day.from)} → ${esc(day.to)}</span></div>`;
   return `<div class="today-banner">
     <div class="kicker">${esc(label)} · ${fmtDate(day.date)}</div>
-    <h2>${esc(day.title)}</h2>
+    <h2>${esc(day.title)}${sayBtn(day.title)}</h2>
     <p>${esc(day.summary)}</p>${stats}
   </div>`;
 }
@@ -201,12 +243,12 @@ function selectDay(id) {
   const h = HOTELS[d.hotel];
   const detail = document.getElementById('day-detail');
   detail.innerHTML = `
-    <div class="leg">${esc(d.from)} <span class="arrow">→</span> ${esc(d.to)}</div>
+    <div class="leg">${esc(d.from)}${sayBtn(d.from)} <span class="arrow">→</span> ${esc(d.to)}${sayBtn(d.to)}</div>
     <div class="leg-meta">${fmtDate(d.date)}${d.miles ? ` · ${d.miles} mi · ~${d.hours} hrs driving` : ''}</div>
     <p class="leg-summary">${esc(d.summary)}</p>
     ${h ? block('Sleep', 'stay', hotelCard(h)) : ''}
     ${d.stops.length ? `<div class="block route"><h3><span class="dot"></span>The route, in order</h3><div class="card">${
-      d.stops.map((p, i) => `<div class="stop"><div class="n">${i + 1}</div><div><h4>${esc(p.name)}</h4><p>${esc(p.note)}</p>${poiLinks(p, true)}</div></div>`).join('')
+      d.stops.map((p, i) => `<div class="stop"><div class="n">${i + 1}</div><div><h4>${esc(p.name)}${sayBtn(p.name)}</h4><p>${esc(p.note)}</p>${poiLinks(p, true)}</div></div>`).join('')
     }</div></div>` : ''}
     ${block('Lunch ideas', 'food', d.lunch.map(p => poiCard(p, true)).join(''))}
     ${block('Dinner ideas', 'food', d.dinner.map(p => poiCard(p, true)).join(''))}
@@ -234,7 +276,7 @@ function poiMarker(p, color, extraHTML = '') {
   const icon = L.divIcon({ className: 'poi-dot', iconSize: [14, 14], iconAnchor: [7, 7],
     html: `<span style="background:${color}"></span>` });
   return L.marker([p.lat, p.lng], { icon })
-    .bindPopup(`<b>${esc(p.name)}</b><br>${esc(p.note || '')}${extraHTML}<br>
+    .bindPopup(`<b>${esc(p.name)}</b>${sayBtn(p.name)}<br>${esc(p.note || '')}${extraHTML}<br>
       <a target="_blank" rel="noopener" href="${gmapsNav(p)}">Navigate ↗</a>
       ${p.url ? ` · <a target="_blank" rel="noopener" href="${esc(p.url)}">Website ↗</a>` : ''}`);
 }

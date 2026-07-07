@@ -219,6 +219,35 @@ a { color: var(--glacier-deep); text-decoration-thickness: 1px; text-underline-o
 .btn.ghost { background: transparent; color: var(--glacier-deep); border: 1px solid var(--line); }
 .key-status { font-family: var(--font-mono); font-size: 12px; color: var(--moss); }
 
+/* ── pronunciation ── */
+.say {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%; vertical-align: -6px;
+  margin-left: 6px; color: var(--glacier); background: var(--paper);
+  border: 1px solid var(--line); flex: none;
+}
+.say svg { width: 14px; height: 14px; }
+.say:active { background: var(--glacier); color: #fff; }
+.today-banner .say { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.25); color: var(--sun); }
+.leg .say { vertical-align: 1px; }
+.leaflet-popup-content .say { width: 22px; height: 22px; vertical-align: -5px; }
+
+#pron-toast {
+  position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 14px); z-index: 950;
+  transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+  background: var(--ink); color: #EAF2F5; border-radius: 14px;
+  padding: 10px 18px; max-width: min(92vw, 480px); text-align: center;
+  box-shadow: 0 6px 24px rgba(20,33,43,.35);
+  transition: opacity .25s ease, transform .25s ease;
+}
+#pron-toast.show { opacity: 1; transform: translate(-50%, 0); }
+#pron-toast b { font-family: var(--font-display); font-size: 16px; display: block; }
+#pron-toast .t { font-family: var(--font-mono); font-size: 13.5px; color: var(--sun); display: block; margin-top: 2px; }
+#pron-toast .g { font-size: 12.5px; color: #B8CBD6; display: block; margin-top: 1px; font-style: italic; }
+@media (prefers-reduced-motion: reduce) {
+  #pron-toast { transition: opacity .25s ease; transform: translate(-50%, 0); }
+}
+
 /* ── tab bar ── */
 .tabbar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 900;
